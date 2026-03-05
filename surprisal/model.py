@@ -126,6 +126,7 @@ class HuggingFaceModel(Model):
         device_map: str = "auto",
         trust_remote_code: bool = False,
         eight_bit: bool = False,
+        token: str | bool | None = None,
     ) -> None:
         super().__init__(model_id)
         import torch  # pylint: disable=import-outside-toplevel
@@ -139,7 +140,8 @@ class HuggingFaceModel(Model):
             raise ValueError(
                 f"precision must be one of {list(precisions.keys())}, got {precision}"
             )
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_id,
+                                                       token=token)
         # self.model_class = model_class
 
         if eight_bit:
@@ -153,6 +155,7 @@ class HuggingFaceModel(Model):
                 torch_dtype=torch.float16,
                 device_map="auto",
                 quantization_config=bnb_config,
+                token=token,
             )
             self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -162,6 +165,7 @@ class HuggingFaceModel(Model):
                 torch_dtype=precisions[precision],
                 trust_remote_code=trust_remote_code,
                 device_map=device_map,
+                token=token,
             )
             self.to(device)  # initializes a variable called `device`
         self.model.eval()
